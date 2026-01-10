@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema({
     },
     status : {
         type : String,
-        enum : ["Active", "Inactive", "Blocked"],
+        enum : ["Active", "Inactive", "Suspended"],
         default : "Active"
     },
     address_details : [
@@ -47,7 +47,7 @@ const userSchema = new mongoose.Schema({
     shopping_cart : [
         {
             type : mongoose.Schema.ObjectId,
-            ref : "cart"
+            ref : "cartProduct"
         }
     ],
     orderHistory : [
