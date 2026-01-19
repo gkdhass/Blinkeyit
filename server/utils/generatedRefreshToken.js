@@ -1,4 +1,5 @@
 import UserModel  from "../models/user.model.js"
+import jwt from 'jsonwebtoken'
 
 const generatedRefreshToken = async(userId) => {
     const tonken = await jwt.sign({_id : userId},

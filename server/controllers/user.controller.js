@@ -158,6 +158,8 @@ export async function loginController(request, response){
         secure : true,
         sameSite : "None"
       }
+
+
       response.cookie('accessToken', accesstoken, cookiesOptions)
       response.cookie('refreshToken', refreshtoken, cookiesOptions)
 
@@ -181,4 +183,20 @@ export async function loginController(request, response){
       success : false
     })
   }
+}
+
+
+//logout Controller
+
+export async function logoutController(request,response){
+  try{
+    
+  }catch(error){
+    return response.status(500).json({
+      message : error.message || error,
+      error : true,
+      success : false
+    })
+  }
+
 }

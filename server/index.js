@@ -32,6 +32,7 @@ app.get('/', (request, response) => {
 })
 
 app.use('/api/user', userRouter)
+app.use(cookieParser())
 
 connectDB().then(() => {
     app.listen(PORT, () => {
