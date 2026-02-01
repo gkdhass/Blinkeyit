@@ -191,6 +191,7 @@ export async function loginController(request, response){
 
 export async function logoutController(request,response){
   try{
+<<<<<<< HEAD
 
     const userid = request.userId
 
@@ -213,6 +214,9 @@ export async function logoutController(request,response){
       error : false,
       success : true
     })
+=======
+    
+>>>>>>> d09d2d5eaed67ef805eb313b7b9526361ca3776c
   }catch(error){
     return response.status(500).json({
       message : error.message || error,
@@ -221,6 +225,7 @@ export async function logoutController(request,response){
     })
   }
 
+<<<<<<< HEAD
 }
 
 
@@ -294,3 +299,6 @@ export async function updateUserDetails(request, response) {
 }
 
 //
+=======
+}
+>>>>>>> d09d2d5eaed67ef805eb313b7b9526361ca3776c
