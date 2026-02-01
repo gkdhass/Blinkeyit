@@ -1,0 +1,304 @@
+import sendEmail from '../config/sendEmail.js'
+import UserModel from '../models/user.model.js'
+import verifyEmailTemplate from '../utils/verifyEmailTemplate.js'
+import bcryptjs from 'bcryptjs'
+import generatedAccessToken from '../utils/generatedAccessToken.js'
+import generatedRefreshToken from '../utils/generatedRefreshToken.js'
+import uploadImageClodinary from '../utils/uploadimageClodinary.js'
+
+
+
+export async function registerUserController(request, response) {
+  try {
+    const { name, email, password } = request.body
+
+    if (!name || !email || !password) {
+      return response.status(400).json({
+        message: "Provide email, name, password",
+        error: true,
+        success: false
+      })
+    }
+
+    const user = await UserModel.findOne({ email })
+
+    if (user) {
+      return response.json({
+        message: "Already registered email",
+        error: true,
+        success: false
+      })
+    }
+
+    const salt = await bcryptjs.genSalt(10)
+    const hashedPassword = await bcryptjs.hash(password, salt)
+
+    const payload = {
+      name,
+      email,
+      password: hashedPassword
+    }
+
+    const newUser = new UserModel(payload)
+    const save = await newUser.save()
+
+    const verifyEmailUrl = `${process.env.FRONTEND_URL}/verify-email?code=${save?._id}`
+
+    const verifyEmail = await sendEmail({
+      sendTo: email,
+      subject: "Verify email from binkeyit",
+      html: verifyEmailTemplate({
+        name,
+        url: verifyEmailUrl
+      })
+    })
+
+    return response.json({
+      message: "User registered successfully.",
+      error: false,
+      success: true,
+      data: save
+    })
+
+  } catch (error) {
+    console.error("REGISTER ERROR 👉", error) // 👈 ADD THIS
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false
+    })
+  }
+}
+
+
+export async function verifyEmailController(request, response) {
+  try {
+    const { code } = request.body 
+
+
+    const user = await UserModel.findOne({ _id : code})
+
+if(!user){
+  return response.status(404).json({
+    message : "Invalid code",
+    error : true,
+    success : false
+  })
+}
+
+const updateUser = await UserModel.updateOne({ _id : code}, {
+  verify_email : true
+})
+
+    return response.json({
+      message : "verify email done",
+      success : true,
+      error : false
+    })
+
+  }catch (error) {
+    return response.status(500).json({
+      message : error.message || error,
+      error : true,
+      success : true
+    })
+  }
+}
+
+
+//login Controller
+
+export async function loginController(request, response){
+  try {
+
+      const { email, password} = request.body
+
+
+      if(!email || !password){
+        return response.status(400).json({
+          message : " provide email, password ",
+          error : true,
+          success : false
+        })
+      }
+
+      const user = await UserModel.findOne({ email })
+
+      if(!user){
+        return response.status(400).json({
+          message : "User not register",
+          error : true,
+          success : false
+        })
+      }
+
+      if(user.status !== "Active"){
+        return response.status(400).json({
+          message : "Contact to Admin",
+          error : true,
+          success : false
+        })
+      }
+
+      const checkPassword = await bcryptjs.compare(password, user.password)
+
+      if(!checkPassword){
+        return response.status(400).json({
+          message : "check your password",
+          error : true,
+          success : false
+        })
+      }
+      
+      
+      const accesstoken = await generatedAccessToken(user._id)
+      const refreshtoken = await generatedRefreshToken(user._id)
+
+      const cookiesOptions = {
+        httpOnly : true,
+        secure : true,
+        sameSite : "None"
+      }
+
+
+      response.cookie('accessToken', accesstoken, cookiesOptions)
+      response.cookie('refreshToken', refreshtoken, cookiesOptions)
+
+
+      return response.json({
+        message : "Login successfully",
+        error : false,
+        success : true,
+        data : {
+          accesstoken,
+          refreshtoken
+        }
+      })
+
+
+
+  } catch (error) {
+    return response.status(500).json({
+      message : error.message || error,
+      error : true,
+      success : false
+    })
+  }
+}
+
+
+//logout Controller
+
+export async function logoutController(request,response){
+  try{
+<<<<<<< HEAD
+
+    const userid = request.userId
+
+
+    const cookiesOptions = {
+        httpOnly : true,
+        secure : true,
+        sameSite : "None"
+      }
+
+    response.clearCookie("accessToken",cookiesOptions)
+    response.clearCookie("refreshToken",cookiesOptions)
+
+    const removeRefreshToken = await UserModel.findByIdAndUpdate(userid, {
+      refresh_token : ""
+    })
+
+    return response.json({
+      message : "Logout successfully",
+      error : false,
+      success : true
+    })
+=======
+    
+>>>>>>> d09d2d5eaed67ef805eb313b7b9526361ca3776c
+  }catch(error){
+    return response.status(500).json({
+      message : error.message || error,
+      error : true,
+      success : false
+    })
+  }
+
+<<<<<<< HEAD
+}
+
+
+//upload user avatar
+export async function uploadAvatar(request,response){
+  try{
+     const userId = request.userId  // auth middleware
+     const image = request.file   // multer middleware
+
+     const upload = await uploadImageClodinary(image)
+
+    const updateUser = await UserModel.findByIdAndUpdate(userId,{
+      avatar : upload.url
+     })
+    return response.json({
+      message : "Upload profile",
+      data : {
+        _id : userId,
+        avatar :  upload.url
+      }
+
+    })
+
+  }
+  catch(error){
+    return response.status(500).json({
+      message : error.message || error,
+      error : true,
+      success : false
+    })
+  }
+}
+
+// update user details
+export async function updateUserDetails(request, response) {
+  try {
+    const userId = request.userId;
+    const { name, email, mobile, password } = request.body;
+
+    let hashPassword = ""
+
+    if (password) {
+      const salt = await bcryptjs.genSalt(10);
+      hashPassword = await bcryptjs.hash(password, salt);
+    }
+
+    const updateUser = await UserModel.updateOne(
+      { _id: userId },
+      {
+        ...(name && { name : name }),
+        ...(email && { email : email }),
+        ...(mobile && { mobile : mobile }),
+        ...(password && { password: hashPassword }),
+      }
+    );
+
+    return response.json({
+      message: "User updated successfully",
+      success: true,
+      error: false,
+      data: updateUser,
+    });
+
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+//
+=======
+}
+>>>>>>> d09d2d5eaed67ef805eb313b7b9526361ca3776c
